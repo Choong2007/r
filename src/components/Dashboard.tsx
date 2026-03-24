@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { GoogleGenAI, Type } from "@google/genai";
 import { 
@@ -29,8 +29,7 @@ import {
   Camera,
   Upload,
   Home,
-  LayoutDashboard,
-  X
+  LayoutDashboard
 } from 'lucide-react';
 import { 
   PieChart, 
@@ -246,53 +245,6 @@ export default function Dashboard() {
   const [filterCategory, setFilterCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [isScanning, setIsScanning] = useState(false);
-  const [isCameraActive, setIsCameraActive] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  const startCamera = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment' } 
-      });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        setIsCameraActive(true);
-      }
-    } catch (err) {
-      console.error("Error accessing camera:", err);
-    }
-  };
-
-  const stopCamera = () => {
-    if (videoRef.current && videoRef.current.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream;
-      stream.getTracks().forEach(track => track.stop());
-      videoRef.current.srcObject = null;
-    }
-    setIsCameraActive(false);
-  };
-
-  const capturePhoto = () => {
-    if (videoRef.current && canvasRef.current) {
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        canvas.toBlob((blob) => {
-          if (blob) {
-            const file = new File([blob], "receipt.jpg", { type: "image/jpeg" });
-            handleScanReceipt(file);
-            stopCamera();
-          }
-        }, 'image/jpeg');
-      }
-    }
-  };
-
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     category: 'Food' as Category,
@@ -1048,52 +1000,28 @@ export default function Dashboard() {
                   </h3>
                   <div className="mb-6">
                     <div className="grid grid-cols-2 gap-3">
-                      {/* Left: Camera */}
-                      <div className={cn(
-                        "relative flex flex-col items-center justify-center h-32 border-2 border-dashed border-surface-container-high rounded-2xl overflow-hidden transition-all",
+                      <label className={cn(
+                        "flex flex-col items-center justify-center h-24 border-2 border-dashed border-surface-container-high rounded-2xl cursor-pointer hover:bg-surface-container-lowest transition-all group relative overflow-hidden",
                         isScanning && "opacity-50 pointer-events-none"
                       )}>
-                        {isCameraActive ? (
-                          <div className="absolute inset-0 w-full h-full bg-black">
-                            <video 
-                              ref={videoRef} 
-                              autoPlay 
-                              playsInline 
-                              className="w-full h-full object-cover"
-                            />
-                            <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-4 px-2">
-                              <button 
-                                onClick={capturePhoto}
-                                className="p-3 bg-primary text-on-primary rounded-full shadow-xl hover:scale-110 transition-transform"
-                              >
-                                <Camera className="w-6 h-6" />
-                              </button>
-                              <button 
-                                onClick={stopCamera}
-                                className="p-3 bg-surface-container-high text-on-surface rounded-full shadow-xl hover:scale-110 transition-transform"
-                              >
-                                <X className="w-6 h-6" />
-                              </button>
-                            </div>
+                        <div className="flex flex-col items-center gap-1">
+                          <div className="p-2 bg-primary/10 rounded-full group-hover:scale-110 transition-transform">
+                            <Camera className="w-5 h-5 text-primary" />
                           </div>
-                        ) : (
-                          <button 
-                            onClick={startCamera}
-                            className="flex flex-col items-center gap-1 w-full h-full hover:bg-surface-container-lowest transition-colors"
-                            disabled={isScanning}
-                          >
-                            <div className="p-2 bg-primary/10 rounded-full">
-                              <Camera className="w-5 h-5 text-primary" />
-                            </div>
-                            <span className="text-[10px] font-bold text-on-surface-variant">{t('takePhoto')}</span>
-                          </button>
-                        )}
-                        <canvas ref={canvasRef} className="hidden" />
-                      </div>
+                          <span className="text-[10px] font-bold text-on-surface-variant">{t('takePhoto')}</span>
+                        </div>
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          capture="environment"
+                          className="hidden" 
+                          onChange={(e) => e.target.files?.[0] && handleScanReceipt(e.target.files[0])}
+                          disabled={isScanning}
+                        />
+                      </label>
 
-                      {/* Right: Upload */}
                       <label className={cn(
-                        "flex flex-col items-center justify-center h-32 border-2 border-dashed border-surface-container-high rounded-2xl cursor-pointer hover:bg-surface-container-lowest transition-all group relative overflow-hidden",
+                        "flex flex-col items-center justify-center h-24 border-2 border-dashed border-surface-container-high rounded-2xl cursor-pointer hover:bg-surface-container-lowest transition-all group relative overflow-hidden",
                         isScanning && "opacity-50 pointer-events-none"
                       )}>
                         <div className="flex flex-col items-center gap-1">
