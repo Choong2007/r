@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+:root {
+  --primary: #005050;
+  --primary-container: #006a6a;
+}
+
+@theme {
+  --font-headline: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-label: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --color-primary: var(--primary);
+  --color-primary-container: var(--primary-container);
+  --color-on-primary: #ffffff;
+  
+  --color-secondary: #4a6363;
+  --color-secondary-container: #cce8e7;
+  --color-on-secondary: #ffffff;
+
+  --color-tertiary: #70371a;
+  --color-tertiary-container: #8d4e2f;
+  
+  --color-surface: #f8f9fb;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f2f4f6;
+  --color-surface-container: #edeef0;
+  --color-surface-container-high: #e7e8ea;
+  --color-surface-container-highest: #e1e2e4;
+  
+  --color-on-surface: #191c1e;
+  --color-on-surface-variant: #3e4948;
+  
+  --color-outline-variant: #bec9c8;
+  --color-error: #ba1a1a;
+}
+
+@layer base {
+  body {
+    @apply bg-surface text-on-surface font-body antialiased;
+  }
+}
+
+.premium-gradient {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 100%);
+}
+
+.ghost-border {
+  border: 1px solid rgba(190, 201, 200, 0.15);
+}
+
+.glass-effect {
+  backdrop-filter: blur(16px);
+  background-color: rgba(225, 226, 228, 0.7);
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}

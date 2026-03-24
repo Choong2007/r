@@ -1,0 +1,50 @@
+{
+  "entities": {
+    "Transaction": {
+      "title": "Transaction",
+      "description": "A financial transaction record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "category": { "type": "string" },
+        "description": { "type": "string" },
+        "amount": { "type": "number" },
+        "uid": { "type": "string", "description": "The owner of the transaction" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["date", "category", "description", "amount", "uid"]
+    },
+    "User": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "client"] }
+      },
+      "required": ["uid", "email"]
+    }
+  },
+  "firestore": {
+    "/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "User transactions"
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/budgets/{userId}_{category}": {
+      "schema": "object",
+      "description": "User category budgets"
+    },
+    "/settings/{userId}": {
+      "schema": "object",
+      "description": "User app settings"
+    }
+  }
+}

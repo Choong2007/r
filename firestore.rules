@@ -1,0 +1,129 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: userId (Firebase Auth UID)
+    // Fields:
+    //   - uid: string (required)
+    //   - email: string (required, format: email)
+    //   - displayName: string (optional)
+    //   - photoURL: string (optional)
+    //   - role: string (required, enum: ['admin', 'client'])
+    //
+    // Collection: transactions
+    // Document ID: transactionId (Auto-generated)
+    // Fields:
+    //   - id: string (required)
+    //   - date: string (required, format: date)
+    //   - category: string (required)
+    //   - description: string (required)
+    //   - amount: number (required)
+    //   - uid: string (required, must match author UID)
+    //   - createdAt: timestamp (optional)
+    //
+    // Collection: budgets
+    // Document ID: {userId}_{category}
+    // Fields:
+    //   - amount: number (required)
+    //   - uid: string (required)
+    //   - updatedAt: timestamp (optional)
+    //
+    // Collection: settings
+    // Document ID: userId (Firebase Auth UID)
+    // Fields:
+    //   - themeColor: string (optional)
+    //   - updatedAt: timestamp (optional)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.uid;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() &&
+        (request.auth.token.email == "xingshengchoong@gmail.com" && request.auth.token.email_verified == true);
+    }
+    
+    function isValidEmail(email) {
+      return email is string &&
+        email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+    
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+    
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+    
+    function isValidUser(data) {
+      return hasOnlyAllowedFields(['uid', 'email', 'displayName', 'photoURL', 'role']) &&
+             data.uid is string && data.uid.size() > 0 &&
+             data.email is string && isValidEmail(data.email) &&
+             data.role in ['admin', 'client'];
+    }
+    
+    function isValidTransaction(data) {
+      return hasOnlyAllowedFields(['date', 'category', 'description', 'amount', 'uid', 'createdAt']) &&
+             data.date is string && data.date.matches("^\\d{4}-\\d{2}-\\d{2}$") &&
+             data.category is string && data.category.size() > 0 &&
+             data.description is string && data.description.size() > 0 && data.description.size() < 500 &&
+             data.amount is number &&
+             data.uid is string && data.uid == request.auth.uid;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isOwner(userId) && (request.resource.data.role == 'client' || isAdmin());
+      allow update: if isOwner(userId) && request.resource.data.role == resource.data.role;
+      allow write: if isAdmin();
+    }
+    
+    match /transactions/{transactionId} {
+      allow read: if isAuthenticated() && (resource.data.uid == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && isValidTransaction(request.resource.data);
+      allow update: if isAuthenticated() && (resource.data.uid == request.auth.uid || isAdmin()) && isValidTransaction(request.resource.data);
+      allow delete: if isAuthenticated() && (resource.data.uid == request.auth.uid || isAdmin());
+    }
+    
+    match /budgets/{budgetId} {
+      allow read: if isAuthenticated() && (resource.data.uid == request.auth.uid || isAdmin());
+      allow write: if isAuthenticated() && ( (request.resource.data.uid == request.auth.uid || (resource != null && resource.data.uid == request.auth.uid)) || isAdmin() );
+    }
+    
+    match /settings/{userId} {
+      allow read, write: if isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Default deny
+    match /{path=**} {
+      allow read, write: if false;
+    }
+  }
+}

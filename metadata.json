@@ -1,0 +1,5 @@
+{
+  "name": "The Precision Ledger",
+  "description": "A premium, editorial-style personal finance tracker designed for clarity and intentional wealth management.",
+  "requestFramePermissions": ["camera"]
+}
